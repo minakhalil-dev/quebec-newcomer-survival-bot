@@ -1,15 +1,40 @@
 # Quebec Newcomer Survival Bot
 
-A Retrieval-Augmented Generation (RAG) bot that answers newcomer questions
-about Quebec — driver's licence (SAAQ), health insurance (RAMQ), tenant
-rights, taxes, free French courses, childcare, and finding a doctor — **with
-citations, and with an explicit "I don't know" when the docs don't cover it.**
+Just landed in Quebec? Congrats — and good luck.
+
+Everything is in French, the health card has a waiting period, the
+driver's licence exchange has its own rules, your lease is nothing
+like back home, and even finding a doctor feels like a quest. Nobody
+hands you a manual for all that. You just have to figure it out,
+usually in a second language, while also trying to live your life.
+
+This bot is a little helper for that messy first chapter. Ask it in
+English or French about the SAAQ, RAMQ, renting, taxes, free French
+classes, childcare, or finding a doctor, and it answers from
+plain-language summaries — with sources you can actually check. And
+if it doesn't know, it just says so, instead of making something up.
+Because guessing about a licence or a lease is the last thing a
+newcomer needs.
+
+Under the hood it's a Retrieval-Augmented Generation (RAG) bot:
+it searches its docs, then answers with citations.
 
 > **Not legal, tax, or medical advice.** The docs in `docs/` are paraphrased,
 > bilingual summaries written for this project, not copies of official pages.
 > Always check the official source in `docs/sources.md` before acting, because
 > rules, deadlines, and fees change. No TELUS or client data is used anywhere
 > in this repo — only public-topic summaries and synthetic eval questions.
+
+## Disclaimer
+
+This project is for general information and learning only. It is not
+legal, tax, medical, or immigration advice, it is not affiliated with
+or endorsed by the SAAQ, RAMQ, or any other public body named in the
+docs, and its information may be incomplete or out of date. Verify
+any deadline, fee, or eligibility rule with the official source
+before acting, and use the project at your own risk. The full text is
+in [DISCLAIMER.md](DISCLAIMER.md), and the software is provided "AS IS"
+under the MIT LICENSE.
 
 ## Quickstart (3 commands)
 
@@ -102,6 +127,7 @@ exists, no SBERT number is claimed in this README.
 ## Project structure
 
 ```
+DISCLAIMER.md           # full disclaimer — read before using
 rag.py                  # load, chunk, TF-IDF/SBERT, retrieve, answer, CLI
 eval.py                 # Hit@1/Hit@5/MRR + abstention accuracy
 eval/questions.json     # 24 questions with expected sources
