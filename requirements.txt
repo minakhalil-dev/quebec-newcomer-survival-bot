@@ -1,0 +1,5 @@
+numpy>=1.26
+# Optional, only for generated (non-extractive) answers:
+# google-generativeai>=0.8
+# Optional, only for --embedder sbert (multilingual embeddings):
+# sentence-transformers>=3.0
