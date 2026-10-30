@@ -19,6 +19,38 @@ newcomer needs.
 Under the hood it's a Retrieval-Augmented Generation (RAG) bot:
 it searches its docs, then answers with citations.
 
+## Why this project exists
+
+This is a **learning project, not a production service** — and it is
+small on purpose.
+
+The point is to show, in one readable file (`rag.py`), how RAG
+actually works end to end on a real bilingual problem: a newcomer
+asking in English about a French-language system. That is why the repo
+keeps everything visible and measurable, instead of hiding it behind
+a hosted app:
+
+- **Chunking** — splitting docs into citable, overlapping chunks.
+- **Retrieval** — a TF-IDF baseline first, so the result is
+  reproducible anywhere, with multilingual embeddings (SBERT) as the
+  comparison to test, not a claim.
+- **Citations** — every answer points back to a doc you can open,
+  and to the official page behind it.
+- **Abstention** — saying "I don't know" when the docs don't cover
+  the question, instead of guessing about a licence, lease, or
+  health card. That is tested, not just promised.
+- **Evaluation** — a small, honest eval set (24 questions) with the
+  numbers printed in this README, including what is *not* yet
+  measured.
+
+If you are learning RAG, read it in this order: `docs/` (the
+knowledge), `rag.py` (chunk → embed → retrieve → answer), then
+`eval.py` (did retrieval actually work?). If you wanted to turn
+this into a real service, the next steps would be a real tokenizer,
+proper multilingual embeddings, larger verified docs, and a direct
+link to the official sources — all listed as stretch goals in the
+code, not silently skipped.
+
 > **Not legal, tax, or medical advice.** The docs in `docs/` are paraphrased,
 > bilingual summaries written for this project, not copies of official pages.
 > Always check the official source in `docs/sources.md` before acting, because
@@ -36,17 +68,31 @@ before acting, and use the project at your own risk. The full text is
 in [DISCLAIMER.md](DISCLAIMER.md), and the software is provided "AS IS"
 under the MIT LICENSE.
 
-## Quickstart (3 commands)
+## Quickstart (2 commands)
 
 ```bash
 pip install -r requirements.txt
-python rag.py index
-python rag.py ask "How do I exchange my foreign driver's licence in Quebec?"
+python rag.py
 ```
 
-No API key needed: the default answer is **extractive** — it shows you the
-exact doc chunks it used, with citations like
-`[saaq-permis-de-conduire.md#chunk-0]`.
+That opens an interactive chat: ask question after question, in
+English or French, with no re-typing the command and no shell
+quoting. Type `quit` to stop. The index is built automatically the
+first time; `python rag.py index` is still there if you want it
+explicitly.
+
+For a single question instead:
+
+```bash
+python rag.py ask "How do I exchange my foreign driver's licence in Quebec?"
+python rag.py ask "How do I exchange my foreign driver's licence in Quebec?" --format markdown
+```
+
+No API key needed: the default answer is **extractive** — it shows
+the most relevant complete sentences from the docs, as short bullets,
+with the official page for each source listed underneath as a
+clickable link. Use `--format markdown` for proper
+`[name](url)` links you can paste into a doc or view on GitHub.
 
 For a generated answer instead, set a Gemini key and ask again:
 
