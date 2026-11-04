@@ -1,211 +1,56 @@
 # Quebec Newcomer Survival Bot
 
-Just landed in Quebec? Congrats — and good luck.
+New in Quebec? Everything is in French, and nobody hands you a manual.
 
-Everything is in French, the health card has a waiting period, the
-driver's licence exchange has its own rules, your lease is nothing
-like back home, and even finding a doctor feels like a quest. Nobody
-hands you a manual for all that. You just have to figure it out,
-usually in a second language, while also trying to live your life.
+This bot answers newcomer questions in English or French — health card,
+driver's licence, renting, taxes, free French classes, childcare,
+finding a doctor — from short plain-language summaries, with sources
+you can check. If it doesn't know, it says so instead of guessing.
 
-This bot is a little helper for that messy first chapter. Ask it in
-English or French about the SAAQ, RAMQ, renting, taxes, free French
-classes, childcare, or finding a doctor, and it answers from
-plain-language summaries — with sources you can actually check. And
-if it doesn't know, it just says so, instead of making something up.
-Because guessing about a licence or a lease is the last thing a
-newcomer needs.
+## How it works
 
-Under the hood it's a Retrieval-Augmented Generation (RAG) bot:
-it searches its docs, then answers with citations.
+Three steps, that's it:
 
-## Why this project exists
+1. **You ask** — in English or French, in the chat.
+2. **It looks it up** — it finds the matching pages in its own docs.
+3. **It answers with sources** — a short answer, each point linked to
+   the doc and the official page behind it. If nothing matches, it
+   says "I don't know."
 
-This is a **learning project, not a production service** — and it is
-small on purpose.
+No database, no hosted app. One Python file, a few docs, and a
+simple search.
 
-The point is to show, in one readable file (`rag.py`), how RAG
-actually works end to end on a real bilingual problem: a newcomer
-asking in English about a French-language system. That is why the repo
-keeps everything visible and measurable, instead of hiding it behind
-a hosted app:
-
-- **Chunking** — splitting docs into citable, overlapping chunks.
-- **Retrieval** — a TF-IDF baseline first, so the result is
-  reproducible anywhere, with multilingual embeddings (SBERT) as the
-  comparison to test, not a claim.
-- **Citations** — every answer points back to a doc you can open,
-  and to the official page behind it.
-- **Abstention** — saying "I don't know" when the docs don't cover
-  the question, instead of guessing about a licence, lease, or
-  health card. That is tested, not just promised.
-- **Evaluation** — a small, honest eval set (24 questions) with the
-  numbers printed in this README, including what is *not* yet
-  measured.
-
-If you are learning RAG, read it in this order: `docs/` (the
-knowledge), `rag.py` (chunk → embed → retrieve → answer), then
-`eval.py` (did retrieval actually work?). If you wanted to turn
-this into a real service, the next steps would be a real tokenizer,
-proper multilingual embeddings, larger verified docs, and a direct
-link to the official sources — all listed as stretch goals in the
-code, not silently skipped.
-
-> **Not legal, tax, or medical advice.** The docs in `docs/` are paraphrased,
-> bilingual summaries written for this project, not copies of official pages.
-> Always check the official source in `docs/sources.md` before acting, because
-> rules, deadlines, and fees change. No TELUS or client data is used anywhere
-> in this repo — only public-topic summaries and synthetic eval questions.
-
-## Disclaimer
-
-This project is for general information and learning only. It is not
-legal, tax, medical, or immigration advice, it is not affiliated with
-or endorsed by the SAAQ, RAMQ, or any other public body named in the
-docs, and its information may be incomplete or out of date. Verify
-any deadline, fee, or eligibility rule with the official source
-before acting, and use the project at your own risk. The full text is
-in [DISCLAIMER.md](DISCLAIMER.md), and the software is provided "AS IS"
-under the MIT LICENSE.
-
-## Quickstart (2 commands)
+## Try it
 
 ```bash
 pip install -r requirements.txt
 python rag.py
 ```
 
-That opens an interactive chat: ask question after question, in
-English or French, with no re-typing the command and no shell
-quoting. Type `quit` to stop. The index is built automatically the
-first time; `python rag.py index` is still there if you want it
-explicitly.
-
-For a single question instead:
+Then just ask. Type `quit` to stop.
 
 ```bash
 python rag.py ask "How do I exchange my foreign driver's licence in Quebec?"
-python rag.py ask "How do I exchange my foreign driver's licence in Quebec?" --format markdown
-```
-
-No API key needed: the default answer is **extractive** — it shows
-the most relevant complete sentences from the docs, as short bullets,
-with the official page for each source listed underneath as a
-clickable link. Use `--format markdown` for proper
-`[name](url)` links you can paste into a doc or view on GitHub.
-
-For a generated answer instead, set a Gemini key and ask again:
-
-```bash
-export GEMINI_API_KEY="..."
-python rag.py ask "Comment échanger mon permis de conduire ?"
-```
-
-## Architecture
-
-```mermaid
-flowchart LR
-    Docs["docs/*.md<br/>7 bilingual summaries<br/>SAAQ, RAMQ, TAL, taxes,<br/>francisation, CPE, GAMF"]
-    Chunk["chunk_text()<br/>~512 tokens, 64 overlap<br/>citable chunk ids"]
-    Embed["TF-IDF (default)<br/>or multilingual SBERT<br/>paraphrase-multilingual-MiniLM"]
-    Index["Vector index<br/>.index/ (numpy)"]
-    Query["Question (EN or FR)"]
-    Retrieve["Top-5 cosine retrieval"]
-    Gate{"Best score<br/>&ge; 0.12?"}
-    Answer["Cited answer<br/>extractive, or Gemini<br/>from retrieved chunks only"]
-    Abstain["Abstain:<br/>I don't know from<br/>these docs"]
-    Docs --> Chunk --> Embed --> Index
-    Query --> Retrieve --> Gate
-    Retrieve --> Index
-    Gate -->|yes| Answer
-    Gate -->|no| Abstain
-```
-
-Why this shape, in one paragraph each:
-
-- **Bilingual docs, cross-lingual questions.** A newcomer often asks in
-  English about a French-language system. That is the hard part of this bot,
-  and the eval measures it separately by question language.
-- **Citations, not confidence.** Every factual claim points to a
-  `source#chunk-n` the user can open. If Gemini is enabled, the prompt
-  forbids facts outside the retrieved chunks.
-- **Abstention as a feature.** A wrong confident answer about a licence
-  deadline or a lease is worse than no answer. The threshold gate is tested
-  with out-of-scope questions (passport renewal, weather, a US work visa).
-
-## Results (measured, 2026-10-29)
-
-Eval set: `eval/questions.json` — 20 in-scope questions (13 English, 7 French)
-plus 4 out-of-scope abstention questions. Run with:
-
-```bash
-python eval.py                          # 512-token chunks
-python eval.py --chunk-tokens 256       # chunk-size comparison
-```
-
-| Chunk size | Chunks | Hit@1 | Hit@5 | MRR | Abstention (4/4 = 1.0) |
-|---|---:|---:|---:|---:|---:|
-| **512 tokens (default)** | 7 | **1.00** | **1.00** | **1.00** | **1.00** |
-| 256 tokens | 16 | 1.00 | 1.00 | 1.00 | 0.75 |
-
-Hit@5 by language at 512 tokens: English 1.00, French 1.00.
-
-**Read this honestly:** this is a small, in-repo eval set (24 questions) on
-short summary docs, so 1.00 means "the pipeline works end to end," not
-"production-ready." The interesting finding is the trade-off in the second
-row: smaller chunks keep retrieval perfect but let one out-of-scope question
-(weather) slip past the threshold at 0.123, while 512-token chunks keep
-abstention perfect. That is why 512 is the default here, and why the
-threshold is a tuned parameter, not a magic number.
-
-**Not yet measured — do not quote:** multilingual SBERT embeddings. To fill
-that column in, run:
-
-```bash
-pip install sentence-transformers
-python eval.py --embedder sbert
-```
-
-The hypothesis to test: SBERT should beat TF-IDF on French-only questions
-asked in English, where exact-token matching is weakest. Until that run
-exists, no SBERT number is claimed in this README.
-
-## Project structure
-
-```
-DISCLAIMER.md           # full disclaimer — read before using
-rag.py                  # load, chunk, TF-IDF/SBERT, retrieve, answer, CLI
-eval.py                 # Hit@1/Hit@5/MRR + abstention accuracy
-eval/questions.json     # 24 questions with expected sources
-eval/results.json       # latest measured results (512 tokens)
-docs/                   # 7 bilingual summaries + sources.md
-requirements.txt        # numpy only by default; Gemini/SBERT are optional
-```
-
-## Try it
-
-```bash
-python rag.py ask "Can a Quebec landlord ask for a cash security deposit?"
 python rag.py ask "Comment s'inscrire à un cours de francisation ?"
-python rag.py ask "How do I renew my American passport in Montreal?"  # should abstain
+python rag.py ask "How do I renew my American passport in Montreal?"  # should say it doesn't know
 ```
 
-## What's next (the portfolio story)
+No API key needed: by default it quotes the most relevant sentences
+from the docs, with the official page for each source underneath.
+Set a Gemini key and it writes a fuller answer from those same
+retrieved pages instead.
 
-This is Project 1 of 3. The planned follow-ups build on this repo, not
-beside it:
+## A learning project, not a service
 
-- **Project 2 — agentic-migration-sandbox:** an agent that investigates a
-  simulated incident using this bot's retrieval, with guardrails.
-- **Project 3 — llm-serving-vllm:** a self-hosted open model (vLLM) that
-  could power this bot, with TTFT / inter-token latency metrics.
+I built this to learn how RAG actually works, end to end, on a real
+problem — and to keep it small enough to read in one sitting. The
+docs are paraphrased summaries, not official pages, so always check
+the official source before acting.
 
-## Contributing / extending
+Want the details? [How it works, in detail](docs/how-it-works.md) —
+the chunking, the retrieval, the eval results, and what's not
+measured yet.
 
-- Add a doc: drop a Markdown file in `docs/`, add its official URL to
-  `docs/sources.md`, add 2–3 questions to `eval/questions.json`, re-run
-  `python eval.py`, and update the table above with the new numbers.
-- Swap the embedder: `--embedder sbert` (see above). Swap the generator:
-  `GEMINI_API_KEY` (see Quickstart). Swap the chunker for a real tokenizer
-  (tiktoken) if you need exact token counts — the current chunker
-  approximates 512 tokens as ~384 words and says so in `rag.py`.
+> Not legal, tax, medical, or immigration advice. Not affiliated
+> with the SAAQ, RAMQ, or any public body. See
+> [DISCLAIMER.md](DISCLAIMER.md).
