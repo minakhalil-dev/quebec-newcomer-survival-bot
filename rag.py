@@ -121,12 +121,12 @@ def load_docs(docs_dir: Path = DOCS_DIR) -> list[dict]:
      # Only the 7 newcomer-topic docs are knowledge. sources.md is an
     # index of official links and how-it-works.md is meta-docs about
     # RAG itself — indexing either one pollutes retrieval (it did:
-# with how-it-works.md in the index, Hit@5 fell to 0.95).
-   for path in sorted(docs_dir.glob("*.md")):
+    # with how-it-works.md in the index, Hit@5 fell to 0.95).
+    for path in sorted(docs_dir.glob("*.md")):
         if path.name.lower() in {"sources.md", "how-it-works.md"}:
             continue
         docs.append({"source": path.name, "text": path.read_text(encoding="utf-8")})
-       if not docs:
+    if not docs:
         raise SystemExit(f"No docs found in {docs_dir}. Did you clone the full repo?")
     return docs
 
