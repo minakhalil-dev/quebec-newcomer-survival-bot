@@ -457,6 +457,7 @@ except Exception as exc:  # noqa: BLE001 - any Gemini failure = fallback
         print(f"Warning: Gemini failed ({exc}); falling back to extractive answer.", file=sys.stderr)
         return None
 
+
 def answer_question(
     index: Index, query: str, top_k: int = 5, threshold: float = 0.12
 ) -> dict:
