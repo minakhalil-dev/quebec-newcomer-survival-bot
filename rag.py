@@ -118,10 +118,10 @@ STOPWORDS = set(
 def load_docs(docs_dir: Path = DOCS_DIR) -> list[dict]:
     """Load every ``*.md`` in ``docs/``. Returns [{source, text}]."""
     docs = []
-    # Only the 7 newcomer-topic docs are knowledge. sources.md is an
-   # index of official links and how-it-works.md is meta-docs about
-   # RAG itself — indexing either one pollutes retrieval (it did:
-   # with how-it-works.md in the index, Hit@5 fell to 0.95).
+     # Only the 7 newcomer-topic docs are knowledge. sources.md is an
+    # index of official links and how-it-works.md is meta-docs about
+    # RAG itself — indexing either one pollutes retrieval (it did:
+# with how-it-works.md in the index, Hit@5 fell to 0.95).
    for path in sorted(docs_dir.glob("*.md")):
         if path.name.lower() in {"sources.md", "how-it-works.md"}:
             continue
