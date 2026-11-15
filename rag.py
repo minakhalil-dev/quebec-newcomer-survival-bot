@@ -445,9 +445,17 @@ def _gemini_answer(query: str, hits: list[dict]) -> str | None:
         "text.\n\n"
         f"Context:\n{context}\n\nQuestion: {query}\nAnswer:"
     )
-    model = genai.GenerativeModel("gemini-2.0-flash")
+# Model name matters: gemini-2.0-flash was retired by Google
+# (404 on 2026-11-15, with Google recommending gemini-3.8-flash).
+# If Gemini ever fails here - retired model, bad key, quota,
+# network - do NOT crash the whole ask. Fall back to the
+# extractive answer instead, and say so on stderr.
+model = genai.GenerativeModel("gemini-3.8-flash")
+try:
     return model.generate_content(prompt).text.strip()
-
+except Exception as exc:  # noqa: BLE001 - any Gemini failure = fallback
+        print(f"Warning: Gemini failed ({exc}); falling back to extractive answer.", file=sys.stderr)
+        return None
 
 def answer_question(
     index: Index, query: str, top_k: int = 5, threshold: float = 0.12
